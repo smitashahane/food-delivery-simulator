@@ -26,10 +26,13 @@ export default function App() {
       try {
         const s = await fetchStats();
         setStats(s);
-        setHistory((h) => {
+        // Use server-side throughput history buckets when available
+        if (s.throughput_history?.length) {
+          setHistory(s.throughput_history);
+        } else {
           const t = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-          return [...h, { t, opm: s.orders_per_minute_last_5 }].slice(-30);
-        });
+          setHistory((h) => [...h, { t, opm: s.orders_per_minute_last_5 }].slice(-30));
+        }
       } catch (_) {}
     }
     load();
@@ -87,6 +90,12 @@ export default function App() {
       <div style={SECTION}>
         <div style={HEADING}>API Explorer</div>
         <ApiExplorer onOrderPlaced={() => fetchRecentOrders(50).then(r => setOrders(r.orders)).catch(() => {})} />
+      </div>
+
+      {/* System Health */}
+      <div style={SECTION}>
+        <div style={HEADING}>System Health</div>
+        <SystemHealth health={stats?.downstream_health} />
       </div>
 
       {/* Status Counts */}

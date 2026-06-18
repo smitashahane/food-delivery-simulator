@@ -1,3 +1,10 @@
+"""
+SSE endpoint — streams order state-change events to the browser.
+
+The generator runs an inner reconnect loop so a Redis blip doesn't kill
+every open dashboard tab.  A heartbeat comment is sent every 15 s so
+proxies and load balancers don't close idle connections.
+"""
 import logging
 import time
 
@@ -11,32 +18,44 @@ stream_bp = Blueprint("stream", __name__)
 
 @stream_bp.get("/stream")
 def stream():
-    """SSE endpoint — emits an event for every order state change."""
     def event_generator():
-        pubsub = get_redis().pubsub()
-        pubsub.subscribe(CHANNEL)
-        try:
-            while True:
-                message = pubsub.get_message(ignore_subscribe_messages=True, timeout=15)
-                if message and message["type"] == "message":
-                    yield f"data: {message['data']}\n\n"
-                else:
-                    # Heartbeat keeps the connection alive through proxies / load balancers
-                    yield ": heartbeat\n\n"
-        except GeneratorExit:
-            pass
-        finally:
+        while True:
+            pubsub = None
             try:
-                pubsub.unsubscribe(CHANNEL)
-                pubsub.close()
-            except Exception:
-                pass
+                pubsub = get_redis().pubsub()
+                pubsub.subscribe(CHANNEL)
+
+                while True:
+                    message = pubsub.get_message(
+                        ignore_subscribe_messages=True, timeout=15
+                    )
+                    if message and message["type"] == "message":
+                        yield f"data: {message['data']}\n\n"
+                    else:
+                        # Heartbeat — keeps connection alive through nginx/proxies
+                        yield ": heartbeat\n\n"
+
+            except GeneratorExit:
+                # Client disconnected — clean exit
+                return
+            except Exception as exc:
+                logger.warning("SSE stream error, reconnecting in 1s: %s", exc)
+                yield ": reconnecting\n\n"
+                time.sleep(1)
+            finally:
+                if pubsub:
+                    try:
+                        pubsub.unsubscribe(CHANNEL)
+                        pubsub.close()
+                    except Exception:
+                        pass
 
     return Response(
         event_generator(),
         mimetype="text/event-stream",
         headers={
-            "Cache-Control": "no-cache",
-            "X-Accel-Buffering": "no",  # disable nginx buffering
+            "Cache-Control":    "no-cache",
+            "X-Accel-Buffering":"no",   # disable nginx buffering for SSE
+            "Connection":       "keep-alive",
         },
     )

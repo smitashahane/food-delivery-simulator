@@ -52,6 +52,10 @@ def place_order():
             order.id,
         )
 
+        # Track throughput in Redis for the dashboard chart
+        from routes.metrics import record_order_placed
+        record_order_placed()
+
         # Enqueue pipeline — imported here to avoid circular import at module load
         from tasks import confirm_order
         confirm_order.apply_async(args=[str(order.id)], queue="pipeline")

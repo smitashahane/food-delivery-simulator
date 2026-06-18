@@ -54,6 +54,28 @@ def _http_get(url: str, timeout: int = 30) -> requests.Response:
     return resp
 
 
+def _record_health(service: str, success: bool) -> None:
+    """
+    Write downstream health signals to Redis so /api/stats can compute
+    live health status without polling the simulators directly.
+
+    Keys (all with short TTLs so stale data auto-expires):
+      health:<service>:last_success   — unix timestamp of last good call
+      health:<service>:consec_errors  — count of consecutive failures
+    """
+    try:
+        from events import get_redis
+        r = get_redis()
+        if success:
+            r.set(f"health:{service}:last_success", time.time(), ex=60)
+            r.delete(f"health:{service}:consec_errors")
+        else:
+            r.incr(f"health:{service}:consec_errors")
+            r.expire(f"health:{service}:consec_errors", 120)
+    except Exception:
+        pass  # health tracking is best-effort — never block the pipeline
+
+
 def _handle_retry(task, order_id: str, stage: str, exc: Exception) -> None:
     """Retry with backoff or send to DLQ after max retries."""
     attempt = task.request.retries
@@ -109,13 +131,16 @@ def confirm_order(self, order_id: str):
 
     try:
         _http_post(f"{RESTAURANT_URL}/confirm", {"order_id": order_id})
+        _record_health("restaurant", success=True)
         logger.info('{"order_id":"%s","stage":"%s","msg":"restaurant confirmed"}', order_id, stage)
     except requests.HTTPError as exc:
+        _record_health("restaurant", success=False)
         if exc.response is not None and exc.response.status_code == 429:
             _handle_rate_limit(self, order_id, stage, exc)
         _handle_retry(self, order_id, stage, exc)
         return
     except requests.RequestException as exc:
+        _record_health("restaurant", success=False)
         _handle_retry(self, order_id, stage, exc)
         return
 
@@ -148,12 +173,15 @@ def prepare_order(self, order_id: str):
     # Signal restaurant to start preparing
     try:
         _http_post(f"{RESTAURANT_URL}/prepare", {"order_id": order_id})
+        _record_health("restaurant", success=True)
     except requests.HTTPError as exc:
+        _record_health("restaurant", success=False)
         if exc.response is not None and exc.response.status_code == 429:
             _handle_rate_limit(self, order_id, stage, exc)
         _handle_retry(self, order_id, stage, exc)
         return
     except requests.RequestException as exc:
+        _record_health("restaurant", success=False)
         _handle_retry(self, order_id, stage, exc)
         return
 
@@ -161,9 +189,11 @@ def prepare_order(self, order_id: str):
     for poll in range(60):
         try:
             resp = _http_get(f"{RESTAURANT_URL}/status/{order_id}")
+            _record_health("restaurant", success=True)
             if resp.json().get("ready"):
                 break
         except requests.RequestException as exc:
+            _record_health("restaurant", success=False)
             _handle_retry(self, order_id, stage, exc)
             return
         time.sleep(2)
@@ -202,8 +232,10 @@ def assign_courier(self, order_id: str):
 
     try:
         _http_post(f"{COURIER_URL}/assign", {"order_id": order_id})
+        _record_health("courier", success=True)
         logger.info('{"order_id":"%s","stage":"%s","msg":"courier assigned"}', order_id, stage)
     except requests.HTTPError as exc:
+        _record_health("courier", success=False)
         if exc.response is not None and exc.response.status_code == 429:
             _handle_rate_limit(self, order_id, stage, exc)
         _handle_retry(self, order_id, stage, exc)
@@ -242,9 +274,11 @@ def complete_delivery(self, order_id: str):
     for poll in range(90):
         try:
             resp = _http_get(f"{COURIER_URL}/status/{order_id}")
+            _record_health("courier", success=True)
             if resp.json().get("delivered"):
                 break
         except requests.RequestException as exc:
+            _record_health("courier", success=False)
             _handle_retry(self, order_id, stage, exc)
             return
         time.sleep(5)
