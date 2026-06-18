@@ -66,6 +66,17 @@ export default function App() {
               DINNER RUSH
             </span>
           )}
+          {stats?.dlq_total > 0 && (
+            <span style={{ background: "#ef444422", color: "#ef4444", border: "1px solid #ef4444",
+              borderRadius: 6, padding: "4px 12px", fontSize: 12, fontWeight: 600 }}>
+              DLQ: {stats.dlq_total}
+            </span>
+          )}
+          {stats?.total_retries > 0 && (
+            <span style={{ background: "#f59e0b11", color: "#f59e0b", fontSize: 12 }}>
+              {stats.total_retries} retries
+            </span>
+          )}
           <span style={{ color: "#6b7280", fontSize: 12 }}>
             {stats ? `${stats.orders_per_minute_last_5} orders/min` : "connecting…"}
           </span>

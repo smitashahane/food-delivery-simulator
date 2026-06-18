@@ -6,6 +6,7 @@ from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from sqlalchemy import func
 
 from database import get_session
+from events import get_redis
 from models import Order, OrderStatus
 
 logger = logging.getLogger(__name__)
@@ -45,9 +46,22 @@ def stats():
     ) or 0
     error_rate = round(recent_failed / recent_total, 4) if recent_total else 0.0
 
+    # Retry + DLQ counters from Redis (written by worker processes)
+    redis = get_redis()
+    retry_stages = ["confirm_order", "prepare_order", "assign_courier", "complete_delivery"]
+    retry_counts = {}
+    for stage in retry_stages:
+        val = redis.get(f"metrics:retries:{stage}")
+        retry_counts[stage] = int(val) if val else 0
+    total_retries = int(redis.get("metrics:retries:total") or 0)
+    dlq_total     = int(redis.get("metrics:dlq_total")     or 0)
+
     return jsonify({
-        "counts_by_status": counts,
+        "counts_by_status":        counts,
         "orders_per_minute_last_5": orders_per_minute,
-        "error_rate_last_5min": error_rate,
-        "snapshot_at": datetime.now(timezone.utc).isoformat(),
+        "error_rate_last_5min":    error_rate,
+        "retries_by_stage":        retry_counts,
+        "total_retries":           total_retries,
+        "dlq_total":               dlq_total,
+        "snapshot_at":             datetime.now(timezone.utc).isoformat(),
     })

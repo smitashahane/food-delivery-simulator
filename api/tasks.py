@@ -61,11 +61,14 @@ def _handle_retry(task, order_id: str, stage: str, exc: Exception) -> None:
         retry_mod.send_to_dlq(order_id, stage, str(exc), WORKER_ID)
         return
 
+    # Record retry in Redis so /api/stats can surface it
+    retry_mod.record_retry(stage)
+
     delay = retry_mod.backoff_delay(attempt)
     logger.warning(
-        '{"order_id":"%s","stage":"%s","attempt":%d,"delay_s":%.1f,'
+        '{"order_id":"%s","stage":"%s","attempt":%d,"max":%d,"delay_s":%.1f,'
         '"msg":"retrying after error","error":"%s"}',
-        order_id, stage, attempt + 1, delay, exc,
+        order_id, stage, attempt + 1, task.max_retries, delay, exc,
     )
     raise task.retry(exc=exc, countdown=delay)
 
@@ -271,10 +274,29 @@ def complete_delivery(self, order_id: str):
     acks_late=True,
 )
 def process_dlq(self, order_id: str, stage: str, error: str):
+    """
+    Final step for failed orders.
+    Logs the failure then transitions failed → dead_lettered so the
+    dashboard shows a clear terminal state distinct from transient failures.
+    """
     _ensure_init()
     logger.error(
         '{"order_id":"%s","stage":"%s","worker_id":"%s",'
         '"msg":"ORDER IN DEAD-LETTER QUEUE","error":"%s"}',
         order_id, stage, WORKER_ID, error,
     )
-    # Phase 7 will add alerting (PagerDuty / Slack webhook) here
+
+    from pipeline import transition, AlreadyTransitionedError, InvalidTransitionError
+    from models import OrderStatus
+    try:
+        transition(
+            order_id,
+            OrderStatus.FAILED,
+            OrderStatus.DEAD_LETTERED,
+            worker_id=f"dlq-processor@{WORKER_ID}",
+            reason=f"Processed by DLQ handler. Original failure at stage={stage}: {error}",
+        )
+    except AlreadyTransitionedError:
+        pass  # already dead_lettered from a previous run
+    except InvalidTransitionError:
+        pass  # order may have been manually resolved
