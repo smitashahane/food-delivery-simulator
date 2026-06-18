@@ -6,6 +6,7 @@ import OrderFeed from "./components/OrderFeed";
 import ThroughputChart from "./components/ThroughputChart";
 import SystemHealth from "./components/SystemHealth";
 import ChaosControls from "./components/ChaosControls";
+import ApiExplorer from "./components/ApiExplorer";
 
 const SECTION = {
   background: "#111827", borderRadius: 10, padding: 20,
@@ -92,6 +93,12 @@ export default function App() {
           </span>
         </div>
         <ThroughputChart history={history} />
+      </div>
+
+      {/* API Explorer */}
+      <div style={SECTION}>
+        <div style={HEADING}>API Explorer</div>
+        <ApiExplorer onOrderPlaced={() => fetchRecentOrders(50).then(r => setOrders(r.orders)).catch(() => {})} />
       </div>
 
       {/* Chaos Controls */}
