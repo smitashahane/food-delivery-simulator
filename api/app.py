@@ -29,10 +29,12 @@ def create_app() -> Flask:
     from routes.orders import orders_bp
     from routes.stream import stream_bp
     from routes.metrics import metrics_bp
+    from routes.chaos import chaos_bp
 
     app.register_blueprint(orders_bp)
     app.register_blueprint(stream_bp)
     app.register_blueprint(metrics_bp)
+    app.register_blueprint(chaos_bp)
 
     @app.get("/health")
     def health():

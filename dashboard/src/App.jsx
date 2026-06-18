@@ -5,6 +5,7 @@ import StatusCounts from "./components/StatusCounts";
 import OrderFeed from "./components/OrderFeed";
 import ThroughputChart from "./components/ThroughputChart";
 import SystemHealth from "./components/SystemHealth";
+import ChaosControls from "./components/ChaosControls";
 
 const SECTION = {
   background: "#111827", borderRadius: 10, padding: 20,
@@ -46,7 +47,8 @@ export default function App() {
     fetchRecentOrders(50).then((r) => setOrders(r.orders)).catch(() => {});
   }, []);
 
-  const isDinnerRush = stats && stats.orders_per_minute_last_5 > 0;
+  const [dinnerRushActive, setDinnerRushActive] = useState(false);
+  const isDinnerRush = dinnerRushActive || (stats && stats.orders_per_minute_last_5 > 20);
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: 24 }}>
@@ -90,6 +92,12 @@ export default function App() {
           </span>
         </div>
         <ThroughputChart history={history} />
+      </div>
+
+      {/* Chaos Controls */}
+      <div style={SECTION}>
+        <div style={HEADING}>Chaos Controls</div>
+        <ChaosControls onBurstStart={() => setDinnerRushActive(true)} />
       </div>
 
       {/* Order Feed */}
