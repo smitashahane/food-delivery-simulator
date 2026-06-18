@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useSSE } from "./hooks/useSSE";
 import { fetchStats, fetchRecentOrders } from "./api";
 import StatusCounts from "./components/StatusCounts";
@@ -51,9 +51,6 @@ export default function App() {
     fetchRecentOrders(50).then((r) => setOrders(r.orders)).catch(() => {});
   }, []);
 
-  const [dinnerRushActive, setDinnerRushActive] = useState(false);
-  const isDinnerRush = dinnerRushActive || (stats && stats.orders_per_minute_last_5 > 20);
-
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: 24 }}>
       {/* Header */}
@@ -62,28 +59,9 @@ export default function App() {
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>Food Delivery Pipeline</h1>
           <p style={{ color: "#6b7280", fontSize: 13, marginTop: 2 }}>Live operations view</p>
         </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          {isDinnerRush && (
-            <span style={{ background: "#f59e0b22", color: "#f59e0b", border: "1px solid #f59e0b",
-              borderRadius: 6, padding: "4px 12px", fontSize: 12, fontWeight: 600 }}>
-              DINNER RUSH
-            </span>
-          )}
-          {stats?.dlq_total > 0 && (
-            <span style={{ background: "#ef444422", color: "#ef4444", border: "1px solid #ef4444",
-              borderRadius: 6, padding: "4px 12px", fontSize: 12, fontWeight: 600 }}>
-              DLQ: {stats.dlq_total}
-            </span>
-          )}
-          {stats?.total_retries > 0 && (
-            <span style={{ background: "#f59e0b11", color: "#f59e0b", fontSize: 12 }}>
-              {stats.total_retries} retries
-            </span>
-          )}
-          <span style={{ color: "#6b7280", fontSize: 12 }}>
-            {stats ? `${stats.orders_per_minute_last_5} orders/min` : "connecting…"}
-          </span>
-        </div>
+        <span style={{ color: "#6b7280", fontSize: 12 }}>
+          {stats ? `${stats.orders_per_minute_last_5} orders/min` : "connecting…"}
+        </span>
       </div>
 
       {/* API Explorer */}
@@ -118,7 +96,7 @@ export default function App() {
       {/* Chaos Controls */}
       <div style={SECTION}>
         <div style={HEADING}>Chaos Controls</div>
-        <ChaosControls onBurstStart={() => setDinnerRushActive(true)} />
+        <ChaosControls />
       </div>
 
       {/* Order Feed */}
