@@ -55,10 +55,10 @@ function Toggle({ label, checked, onChange, color = "#ef4444" }) {
   );
 }
 
-function ServicePanel({ name, label, config, failurePath, latencyPath, blackoutPath, color, latencyMax }) {
+function ServicePanel({ name, label, config, failurePath, latencyPath, blackoutPath, color, initialLatencyMax }) {
   const [failureRate, setFailureRate] = useState(config?.failure_rate ?? 0.2);
   const [latencyMin,  setLatencyMin]  = useState(config?.latency_min  ?? 1);
-  const [latencyMax,  setLatencyMaxS] = useState(config?.latency_max  ?? 8);
+  const [latencyMax,  setLatencyMax]  = useState(config?.latency_max  ?? initialLatencyMax ?? 8);
   const [blackout,    setBlackout]    = useState(config?.blackout      ?? false);
 
   const debounce = useRef({});
@@ -128,7 +128,7 @@ function ServicePanel({ name, label, config, failurePath, latencyPath, blackoutP
       <SliderRow
         label="Latency max (s)"
         value={latencyMax}
-        min={latencyMin + 0.5} max={latencyMax + 0.5 > 30 ? 30 : latencyMax + 10} step={0.5}
+        min={latencyMin + 0.5} max={30} step={0.5}
         format={v => `${v.toFixed(1)}s`}
         onChange={handleLatencyMax}
       />
@@ -185,7 +185,7 @@ export default function ChaosControls({ onBurstStart }) {
           latencyPath="/api/chaos/restaurant/latency"
           blackoutPath="/api/chaos/restaurant/blackout"
           color="#f97316"
-          latencyMax={config?.restaurant?.latency_max ?? 8}
+          initialLatencyMax={config?.restaurant?.latency_max ?? 8}
         />
         <ServicePanel
           name="courier"
@@ -195,7 +195,7 @@ export default function ChaosControls({ onBurstStart }) {
           latencyPath="/api/chaos/courier/latency"
           blackoutPath="/api/chaos/courier/blackout"
           color="#8b5cf6"
-          latencyMax={config?.courier?.latency_max ?? 3}
+          initialLatencyMax={config?.courier?.latency_max ?? 3}
         />
       </div>
 
