@@ -21,6 +21,12 @@ from events import init_redis
 from models import OrderStatus
 from pipeline import transition, AlreadyTransitionedError, InvalidTransitionError
 import retry as retry_mod
+from metrics_registry import (
+    downstream_requests_total,
+    retry_attempts_total,
+    dlq_orders_total,
+    celery_queue_depth,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +69,7 @@ def _record_health(service: str, success: bool) -> None:
       health:<service>:last_success   — unix timestamp of last good call
       health:<service>:consec_errors  — count of consecutive failures
     """
+    downstream_requests_total.labels(service=service, outcome="success" if success else "error").inc()
     try:
         from events import get_redis
         r = get_redis()
@@ -83,8 +90,9 @@ def _handle_retry(task, order_id: str, stage: str, exc: Exception) -> None:
         retry_mod.send_to_dlq(order_id, stage, str(exc), WORKER_ID)
         return
 
-    # Record retry in Redis so /api/stats can surface it
+    # Record retry in Redis (for /api/stats) and prometheus
     retry_mod.record_retry(stage)
+    retry_attempts_total.labels(stage=stage).inc()
 
     delay = retry_mod.backoff_delay(attempt)
     logger.warning(

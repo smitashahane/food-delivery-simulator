@@ -8,6 +8,24 @@ from database import init_db, remove_session
 from events import init_redis
 
 
+def _seed_status_gauge() -> None:
+    """Warm the orders_by_status gauge from current DB counts so Grafana isn't blank on restart."""
+    try:
+        from sqlalchemy import func
+        from database import get_session
+        from models import Order, OrderStatus
+        from metrics_registry import orders_by_status
+        session = get_session()
+        rows = session.query(Order.status, func.count(Order.id)).group_by(Order.status).all()
+        counts = {s.value: 0 for s in OrderStatus}
+        for status, cnt in rows:
+            counts[status.value] = cnt
+        for status_val, cnt in counts.items():
+            orders_by_status.labels(status=status_val).set(cnt)
+    except Exception:
+        pass  # not fatal — gauge will populate as orders flow through
+
+
 def create_app() -> Flask:
     logging.basicConfig(
         level=logging.INFO,
@@ -19,6 +37,9 @@ def create_app() -> Flask:
 
     init_db(app.config["DATABASE_URL"])
     init_redis(app.config["REDIS_URL"])
+
+    # Seed orders_by_status gauge from current DB state
+    _seed_status_gauge()
 
     # Tear down DB session after each request
     @app.teardown_appcontext

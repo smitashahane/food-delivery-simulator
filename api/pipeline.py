@@ -9,6 +9,7 @@ transition() is the single entry point for all state changes. It:
   4. Publishes an SSE event so the dashboard updates in real time.
 """
 import logging
+import time
 import uuid
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -16,6 +17,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from database import get_session
 from events import publish_state_change
 from models import Order, OrderEvent, OrderStatus
+from metrics_registry import orders_by_status, order_stage_duration_seconds
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +92,7 @@ def transition(
                 f"Transition {from_status.value} → {to_status.value} is not permitted"
             )
 
+        _stage_start = time.time()
         order.status = to_status
 
         event = OrderEvent(
@@ -107,6 +110,13 @@ def transition(
             '{"order_id":"%s","from":"%s","to":"%s","worker_id":"%s","msg":"state transition"}',
             order_id, from_status.value, to_status.value, worker_id,
         )
+
+        # Record metrics after commit
+        order_stage_duration_seconds.labels(
+            from_status=from_status.value, to_status=to_status.value
+        ).observe(time.time() - _stage_start)
+        orders_by_status.labels(status=to_status.value).inc()
+        orders_by_status.labels(status=from_status.value).dec()
 
         # Publish after commit so the dashboard never sees a rolled-back state
         publish_state_change(

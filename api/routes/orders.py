@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from database import get_session
 from models import Order, OrderEvent, OrderStatus
+from metrics_registry import orders_ingested_total
 
 logger = logging.getLogger(__name__)
 orders_bp = Blueprint("orders", __name__)
@@ -51,6 +52,8 @@ def place_order():
             '{"order_id":"%s","stage":"placed","worker_id":"api","msg":"Order accepted"}',
             order.id,
         )
+
+        orders_ingested_total.inc()
 
         # Track throughput in Redis for the dashboard chart
         from routes.metrics import record_order_placed

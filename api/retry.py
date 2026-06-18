@@ -87,9 +87,14 @@ def send_to_dlq(order_id: str, stage: str, last_error: str, worker_id: str) -> N
             order_id, stage, worker_id, last_error,
         )
 
-        # Increment DLQ counter in Redis (visible in /api/stats)
+        # Increment DLQ counter in Redis (visible in /api/stats) and prometheus
         try:
             get_redis().incr("metrics:dlq_total")
+        except Exception:
+            pass
+        try:
+            from metrics_registry import dlq_orders_total
+            dlq_orders_total.inc()
         except Exception:
             pass
 

@@ -16,7 +16,22 @@ metrics_bp = Blueprint("metrics", __name__)
 
 @metrics_bp.get("/metrics")
 def prometheus_metrics():
+    _sync_redis_to_gauges()
     return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
+
+
+def _sync_redis_to_gauges() -> None:
+    """
+    Pull Redis-backed counters into prometheus Gauges so Prometheus can scrape them.
+    Called on every /metrics scrape — cheap reads, best-effort.
+    """
+    try:
+        from metrics_registry import celery_queue_depth
+        r = get_redis()
+        depth = r.llen("pipeline") or 0
+        celery_queue_depth.set(depth)
+    except Exception:
+        pass
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
