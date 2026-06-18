@@ -79,7 +79,7 @@ function ServicePanel({ name, label, config, failurePath, latencyPath, blackoutP
   };
   const handleLatencyMax = (v) => {
     const safe = Math.max(v, latencyMin + 0.5);
-    setLatencyMaxS(safe);
+    setLatencyMax(safe);
     send(latencyPath, { min_s: latencyMin, max_s: safe }, "latency");
   };
   const handleBlackout = (v) => {

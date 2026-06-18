@@ -53,9 +53,12 @@ const STATUSES = ["placed", "confirmed", "preparing", "ready", "out_for_delivery
 
 // ── Tab: Place Order ──────────────────────────────────────────────────────────
 
+function randomCustomerId() {
+  return "cust-" + Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
 function PlaceOrder({ onOrderPlaced }) {
   const [restaurantId, setRestaurantId] = useState(RESTAURANTS[0]);
-  const [customerId,   setCustomerId]   = useState("cust-0001");
   const [items,        setItems]        = useState([{ name: "Burger", quantity: 1, price: 12.50 }]);
   const [loading,      setLoading]      = useState(false);
   const [response,     setResponse]     = useState(null);
@@ -70,7 +73,7 @@ function PlaceOrder({ onOrderPlaced }) {
   const submit = async () => {
     setLoading(true);
     const r = await callApi("POST", "/orders", {
-      customer_id:   customerId,
+      customer_id:   randomCustomerId(),
       restaurant_id: restaurantId,
       items:         items.map(i => ({ ...i, price: parseFloat(i.price), quantity: parseInt(i.quantity) })),
       total_amount:  parseFloat(total.toFixed(2)),
@@ -82,11 +85,7 @@ function PlaceOrder({ onOrderPlaced }) {
 
   return (
     <div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
-        <div style={field}>
-          <label style={label}>Customer ID</label>
-          <input style={input} value={customerId} onChange={e => setCustomerId(e.target.value)} />
-        </div>
+      <div style={{ marginBottom: 12 }}>
         <div style={field}>
           <label style={label}>Restaurant</label>
           <select style={input} value={restaurantId} onChange={e => setRestaurantId(e.target.value)}>

@@ -221,13 +221,13 @@ services:
     build:
       context: ./loadgen
     env_file: .env
+    environment:
+      RATE: "2"         # 2 steady orders/sec baseline; Dinner Rush spikes this via Redis
     networks:
       - app-network
     depends_on:
       api:
         condition: service_healthy
-    profiles:
-      - loadgen
     deploy:
       resources:
         limits:
