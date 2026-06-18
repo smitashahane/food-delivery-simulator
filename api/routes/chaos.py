@@ -122,6 +122,19 @@ def trigger_burst():
         return jsonify({"error": str(exc)}), 500
 
 
+@chaos_bp.post("/api/chaos/loadgen/stop")
+def stop_burst():
+    """Immediately cancel a dinner rush by deleting the Redis burst keys."""
+    try:
+        redis = get_redis()
+        redis.delete(LOADGEN_BURST_KEY)
+        redis.delete("loadgen:burst_rps")
+        logger.info("Dinner rush stopped by user")
+        return jsonify({"status": "burst stopped"})
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
 @chaos_bp.get("/api/chaos/loadgen/status")
 def loadgen_status():
     """Returns whether a burst is currently active."""

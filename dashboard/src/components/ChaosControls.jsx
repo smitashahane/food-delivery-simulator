@@ -173,6 +173,14 @@ export default function ChaosControls({ onBurstStart }) {
       });
   };
 
+  const stopBurst = () => {
+    post("/api/chaos/loadgen/stop", {})
+      .then(() => {
+        setBurstActive(false);
+        setBurstRemain(0);
+      });
+  };
+
   return (
     <div>
       {/* Simulator panels */}
@@ -227,24 +235,35 @@ export default function ChaosControls({ onBurstStart }) {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-            <button
-              onClick={triggerBurst}
-              disabled={burstActive}
-              style={{
-                padding: "10px 28px",
-                background: burstActive ? "#374151" : "#f59e0b",
-                color: burstActive ? "#6b7280" : "#0f1117",
-                border: "none", borderRadius: 6,
-                fontWeight: 700, fontSize: 14, cursor: burstActive ? "not-allowed" : "pointer",
-                transition: "background 0.2s",
-              }}
-            >
-              {burstActive ? `RUSH ACTIVE — ${burstRemain}s left` : "Trigger Dinner Rush"}
-            </button>
-            {burstActive && (
-              <span style={{ fontSize: 11, color: "#f59e0b" }}>
-                {burstRps} orders/sec via loadgen
-              </span>
+            {burstActive ? (
+              <>
+                <div style={{ fontSize: 12, color: "#f59e0b", fontWeight: 700, textAlign: "center" }}>
+                  RUSH ACTIVE — {burstRemain}s left · {burstRps}/s
+                </div>
+                <button
+                  onClick={stopBurst}
+                  style={{
+                    padding: "10px 28px",
+                    background: "#ef4444", color: "#fff",
+                    border: "none", borderRadius: 6,
+                    fontWeight: 700, fontSize: 14, cursor: "pointer",
+                  }}
+                >
+                  Stop Rush
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={triggerBurst}
+                style={{
+                  padding: "10px 28px",
+                  background: "#f59e0b", color: "#0f1117",
+                  border: "none", borderRadius: 6,
+                  fontWeight: 700, fontSize: 14, cursor: "pointer",
+                }}
+              >
+                Trigger Dinner Rush
+              </button>
             )}
           </div>
         </div>
