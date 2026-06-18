@@ -72,10 +72,10 @@ export default function App() {
         </div>
       </div>
 
-      {/* System Health */}
+      {/* API Explorer */}
       <div style={SECTION}>
-        <div style={HEADING}>System Health</div>
-        <SystemHealth health={stats?.downstream_health} />
+        <div style={HEADING}>API Explorer</div>
+        <ApiExplorer onOrderPlaced={() => fetchRecentOrders(50).then(r => setOrders(r.orders)).catch(() => {})} />
       </div>
 
       {/* Status Counts */}
@@ -93,12 +93,6 @@ export default function App() {
           </span>
         </div>
         <ThroughputChart history={history} />
-      </div>
-
-      {/* API Explorer */}
-      <div style={SECTION}>
-        <div style={HEADING}>API Explorer</div>
-        <ApiExplorer onOrderPlaced={() => fetchRecentOrders(50).then(r => setOrders(r.orders)).catch(() => {})} />
       </div>
 
       {/* Chaos Controls */}
