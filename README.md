@@ -4,12 +4,13 @@ A full-stack system that simulates a food-delivery order pipeline — from "Plac
 
 ## What it demonstrates
 
-- **High-volume ingestion** — place thousands of orders per second; the queue absorbs bursts without dropping anything
 - **Order lifecycle** — `placed → confirmed → preparing → ready → out_for_delivery → delivered`
 - **Resilience** — restaurant and courier simulators fail randomly; the pipeline retries with exponential backoff and recovers automatically
 - **Exactly-once processing** — concurrent workers never double-process an order; crashes never lose one
 - **Live dashboard** — React UI updates in real time via Server-Sent Events; no manual refresh needed
-- **Dinner rush mode** — one command spikes traffic 10x to simulate peak load
+- **Chaos engineering** — control failure rates, latency, and blackouts from the UI at runtime
+- **Dinner rush mode** — spike traffic to simulate peak load, cancel it early if needed
+- **Observability** — Prometheus metrics + pre-provisioned Grafana dashboard
 
 ## Prerequisites
 
@@ -17,7 +18,7 @@ A full-stack system that simulates a food-delivery order pipeline — from "Plac
 |------|---------|
 | [Docker Desktop](https://www.docker.com/products/docker-desktop) | 24+ |
 
-That's it. Python, Node, Postgres, Redis — everything runs inside containers.
+Everything else (Python, Node, Postgres, Redis) runs inside containers.
 
 ```bash
 docker --version        # should be 24+
@@ -37,146 +38,137 @@ cp .env.example .env
 # 3. Start everything
 docker compose up -d
 
-# 4. Wait ~60 seconds for all services to become healthy
+# 4. Wait ~30 seconds for services to become healthy
 docker compose ps
 ```
 
-All services should show `healthy` or `running`. Open the UIs:
+Open the UIs:
 
 | UI | URL | Credentials |
 |----|-----|-------------|
 | **Dashboard** (live pipeline view) | http://localhost:8080 | — |
-| **Flower** (Celery task monitor) | http://localhost:5555 | — |
 | **Grafana** (ops metrics) | http://localhost:3000 | admin / admin |
 | **Prometheus** | http://localhost:9090 | — |
 
-## Test the API
+## Placing orders
 
-**Place an order:**
+Use the **API Explorer** tab in the dashboard at http://localhost:8080 — select a restaurant, add items, and click Place Order. The order ID and audit trail appear in real time.
+
+Or via curl:
+
 ```bash
 curl -X POST http://localhost:5000/orders \
   -H "Content-Type: application/json" \
   -d '{
     "customer_id": "cust-001",
-    "restaurant_id": "rest-001",
+    "restaurant_id": "rest-01",
     "items": [{"name": "Burger", "quantity": 1, "price": 12.50}],
     "total_amount": 12.50
   }'
 # → 202 {"order_id": "...", "status": "placed", "placed_at": "..."}
 ```
 
-**Track it:**
+Track an order:
 ```bash
 curl http://localhost:5000/orders/<order_id>
 ```
 
-**List all orders (with optional filters):**
+List orders with optional filters:
 ```bash
 curl http://localhost:5000/orders
 curl "http://localhost:5000/orders?status=delivered"
-curl "http://localhost:5000/orders?restaurant_id=rest-001"
+curl "http://localhost:5000/orders?restaurant_id=rest-01"
 ```
 
-**Live stats:**
-```bash
-curl http://localhost:5000/api/stats
-```
+## Simulating chaos
 
-## Trigger a dinner rush
+All chaos controls are available in the **Chaos Controls** section of the dashboard — no curl commands needed:
 
-```bash
-# Spike to 50 orders/sec for 60 seconds
-make rush
+- **Failure rate** — percentage of calls that return 500/503
+- **Max latency** — how slow each downstream call can be
+- **Blackout** — total outage toggle (all calls fail immediately)
+- **Courier auto-blackout** — random 30s outages every ~10 minutes (toggle on/off)
 
-# Custom rate
-make rush rate=10 burst=80 duration=90
-```
+To watch retries and dead-lettering in action, push the restaurant failure rate to 100% and place a few orders.
 
-Watch the dashboard at http://localhost:8080 — the "DINNER RUSH" banner lights up and order counts spike in real time.
+## Dinner rush (load generator)
 
-## Scale workers
+The load generator is opt-in — it doesn't run by default. Start it when you want automated traffic:
 
 ```bash
-make scale n=4    # run 4 parallel Celery workers
+make loadgen    # starts at 2 orders/sec steady rate
 ```
 
-## Simulate downstream failures
+Then trigger a burst from the **Chaos Controls → Dinner Rush** panel in the dashboard, or via:
 
-Force the restaurant simulator to always fail (watch retries and dead-lettering in action):
 ```bash
-# Max failure rate
-curl -X POST http://localhost:5001/admin/set-failure-rate \
-  -H "Content-Type: application/json" \
-  -d '{"rate": 1.0}'
-
-# Restore to default
-curl -X POST http://localhost:5001/admin/set-failure-rate \
-  -H "Content-Type: application/json" \
-  -d '{"rate": 0.2}'
+make rush                          # 50 orders/sec for 60s
+make rush burst=80 duration=90     # custom rate and duration
 ```
 
-Trigger a courier blackout:
-```bash
-curl -X POST http://localhost:5002/admin/set-blackout \
-  -H "Content-Type: application/json" \
-  -d '{"enabled": true}'
-
-# Recover
-curl -X POST http://localhost:5002/admin/set-blackout \
-  -H "Content-Type: application/json" \
-  -d '{"enabled": false}'
-```
+Stop a rush early using the **Stop Rush** button in the dashboard.
 
 ## Common commands
 
 ```bash
-make up                         # start all services
-make down                       # stop all services
-make logs                       # tail all logs
-docker compose logs -f api      # API logs only
-docker compose logs -f worker   # worker logs only
-make scale n=4                  # run 4 workers
-make clean                      # destroy everything including volumes (fresh start)
+make up            # start all services
+make down          # stop all services
+make reload        # restart to pick up config changes (keeps data)
+make reset         # wipe DB + Redis and restart clean (use before a demo)
+make loadgen       # start the load generator (opt-in)
+make rush          # trigger a dinner rush burst via the API
+make scale n=4     # run 4 parallel Celery workers
+make logs          # tail all logs
+make clean         # destroy everything including volumes
 ```
 
 ## Architecture
 
 ```
-Load Generator → Flask API → PostgreSQL (source of truth)
-                           → Redis (Celery broker + SSE pub/sub)
-                           → Celery Workers (pipeline state machine)
-                              → Restaurant Simulator (flaky)
-                              → Courier Simulator (flaky)
+[Orders via UI / curl / loadgen]
+        ↓
+   Flask API  ──→  PostgreSQL  (source of truth)
+        ↓          Redis       (Celery broker + SSE pub/sub + metrics counters)
+   Celery Worker
+        ├──→  Restaurant Simulator  (flaky — configurable chaos)
+        └──→  Courier Simulator     (flaky — configurable chaos)
 
-Flask API /stream → SSE → React Dashboard
-Prometheus scrapes /metrics → Grafana
+Flask API /stream ──→ SSE ──→ React Dashboard
+Prometheus scrapes /metrics ──→ Grafana
 ```
 
 | Service | Port | Role |
 |---------|------|------|
 | Flask API | 5000 | Order ingestion, queries, SSE, /metrics |
 | Celery Worker | — | Pipeline processing |
-| Flower | 5555 | Celery task monitor |
 | PostgreSQL | 5432 | Order state store (internal) |
 | Redis | 6379 | Celery broker + SSE pub/sub (internal) |
 | Restaurant simulator | 5001 | Flaky restaurant API |
 | Courier simulator | 5002 | Flaky courier API |
-| React Dashboard | 8080 | Live business view |
+| React Dashboard | 8080 | Live operations view |
 | Prometheus | 9090 | Metrics collection |
 | Grafana | 3000 | Ops dashboards (pre-provisioned) |
 
-See [specs/architecture.md](specs/architecture.md) for full design rationale and technology tradeoffs.
+## Order states
+
+```
+placed → confirmed → preparing → ready → out_for_delivery → delivered
+                                                          ↘
+                                     (any stage) → failed → dead_lettered
+```
+
+- **failed** — pipeline exhausted all 5 retries
+- **dead_lettered** — confirmed unrecoverable; needs manual intervention in a real system (refund, alert, replay)
 
 ## Project structure
 
 ```
-├── api/               Flask API + Celery tasks
-├── worker/            Pipeline state machine + retry logic
-├── simulators/        Flaky restaurant & courier mocks
+├── api/               Flask API, Celery tasks, pipeline state machine
+├── simulators/        Flaky restaurant & courier simulators
 ├── dashboard/         React frontend (Vite + nginx)
-├── loadgen/           Traffic generator
-├── infra/             Prometheus config + Grafana dashboards
-├── specs/             Full system specifications and build sequence
+├── loadgen/           Traffic generator (opt-in)
+├── infra/             Prometheus config + Grafana dashboard JSON
+├── specs/             System specifications
 └── docker-compose.yml
 ```
 
@@ -184,17 +176,17 @@ See [specs/architecture.md](specs/architecture.md) for full design rationale and
 
 **Services not becoming healthy:**
 ```bash
-docker compose logs postgres    # check DB startup
-docker compose logs api         # check for import errors
+docker compose logs postgres
+docker compose logs api
 ```
 
 **Port already in use:**
 ```bash
-docker compose down             # stop any running instances first
+docker compose down
 docker compose up -d
 ```
 
-**Fresh start (wipe all data):**
+**Wipe everything and start fresh:**
 ```bash
 make clean
 docker compose up -d
