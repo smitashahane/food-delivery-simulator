@@ -138,7 +138,7 @@ function ServicePanel({ name, label, config, failurePath, latencyPath, blackoutP
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function ChaosControls({ onBurstStart }) {
+export default function ChaosControls() {
   const [config,       setConfig]       = useState(null);
   const [burstActive,  setBurstActive]  = useState(false);
   const [burstRemain,  setBurstRemain]  = useState(0);
@@ -169,7 +169,6 @@ export default function ChaosControls({ onBurstStart }) {
       .then(() => {
         setBurstActive(true);
         setBurstRemain(burstDur);
-        onBurstStart?.();
       });
   };
 

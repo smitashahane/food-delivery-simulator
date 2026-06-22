@@ -94,19 +94,6 @@ services:
           cpus: "1.0"
           memory: 512M
 
-  flower:
-    <<: *api-base
-    command: celery -A tasks flower --port=5555
-    ports:
-      - "5555:5555"
-    depends_on:
-      - worker
-    deploy:
-      resources:
-        limits:
-          cpus: "0.25"
-          memory: 128M
-
   # ─── Simulators ────────────────────────────────────────────────────────────
 
   restaurant:

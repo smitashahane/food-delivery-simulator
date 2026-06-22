@@ -16,10 +16,11 @@ restart:
 scale:
 	docker compose up -d --scale worker=$(n)
 
-# Trigger a dinner rush: make rush rate=5 burst=50 duration=60
+# Trigger a dinner rush via the API: make rush burst=50 duration=60
 rush:
-	RATE=$(or $(rate),5) BURST_RPS=$(or $(burst),50) BURST_DURATION=$(or $(duration),60) BURST_DELAY=5 \
-	docker compose --profile loadgen up loadgen
+	curl -s -X POST http://localhost:5000/api/chaos/loadgen/burst \
+	  -H "Content-Type: application/json" \
+	  -d '{"burst_rps":$(or $(burst),50),"duration":$(or $(duration),60)}'
 
 ps:
 	docker compose ps
