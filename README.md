@@ -44,8 +44,8 @@ docker compose ps
 
 Open the UIs:
 
-| UI | URL | Credentials |
-|----|-----|-------------|
+| UI | URL |
+|----|-----|
 | **Dashboard** (live pipeline view) | http://localhost:8080 |
 | **Grafana** (ops metrics) | http://localhost:3000 |
 | **Prometheus** | http://localhost:9090 |
