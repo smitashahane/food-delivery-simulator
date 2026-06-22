@@ -31,7 +31,7 @@ reload:
 
 # Wipe DB + Redis and restart cleanly — use before a demo
 reset:
-	docker compose stop worker loadgen
+	docker compose stop worker loadgen api
 	docker exec practicals-postgres-1 psql -U fooddelivery -d fooddelivery -c "TRUNCATE order_events, orders RESTART IDENTITY CASCADE;"
 	docker exec practicals-redis-1 redis-cli FLUSHDB
 	docker compose up -d --remove-orphans
