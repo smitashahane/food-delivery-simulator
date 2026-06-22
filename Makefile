@@ -1,4 +1,4 @@
-.PHONY: up down logs restart scale rush ps clean reset
+.PHONY: up down logs restart scale rush ps clean reset reload
 
 up:
 	docker compose up -d
@@ -24,6 +24,10 @@ rush:
 
 ps:
 	docker compose ps
+
+# Restart all containers to pick up config changes — keeps existing data
+reload:
+	docker compose up -d --remove-orphans
 
 # Wipe DB + Redis and restart cleanly — use before a demo
 reset:
