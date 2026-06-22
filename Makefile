@@ -1,4 +1,4 @@
-.PHONY: up down logs restart scale rush ps clean reset reload
+.PHONY: up down logs restart scale rush ps clean reset reload loadgen
 
 up:
 	docker compose up -d
@@ -29,9 +29,13 @@ ps:
 reload:
 	docker compose up -d --remove-orphans
 
+# Start the load generator (auto-places orders at RATE/sec)
+loadgen:
+	docker compose --profile loadgen up -d loadgen
+
 # Wipe DB + Redis and restart cleanly — use before a demo
 reset:
-	docker compose stop worker loadgen api
+	docker compose --profile loadgen stop worker loadgen api
 	docker exec practicals-postgres-1 psql -U fooddelivery -d fooddelivery -c "TRUNCATE order_events, orders RESTART IDENTITY CASCADE;"
 	docker exec practicals-redis-1 redis-cli FLUSHDB
 	docker compose up -d --remove-orphans
