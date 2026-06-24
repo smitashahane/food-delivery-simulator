@@ -77,7 +77,7 @@
       "targets": [
         {
           "expr": "rate(retry_attempts_total[1m])",
-          "legendFormat": "retries/sec",
+          "legendFormat": "{{stage}}",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
@@ -238,7 +238,7 @@
       "targets": [
         {
           "expr": "rate(downstream_requests_total{outcome=\"error\"}[1m]) / rate(downstream_requests_total[1m])",
-          "legendFormat": "error rate",
+          "legendFormat": "{{service}}",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
@@ -369,7 +369,7 @@
       "targets": [
         {
           "expr": "histogram_quantile(0.50, rate(order_stage_duration_seconds_bucket[5m]))",
-          "legendFormat": "p50",
+          "legendFormat": "p50 {{from_status}}\u2192{{to_status}}",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
@@ -377,7 +377,7 @@
         },
         {
           "expr": "histogram_quantile(0.95, rate(order_stage_duration_seconds_bucket[5m]))",
-          "legendFormat": "p95",
+          "legendFormat": "p95 {{from_status}}\u2192{{to_status}}",
           "datasource": {
             "type": "prometheus",
             "uid": "prometheus"
