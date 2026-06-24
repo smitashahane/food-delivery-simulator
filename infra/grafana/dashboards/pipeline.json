@@ -470,6 +470,152 @@
         "orientation": "horizontal",
         "displayMode": "gradient"
       }
+    },
+    {
+      "id": 11,
+      "title": "Dead-Lettered Orders \u2014 Failure Detail",
+      "type": "table",
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 26
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "failed_at",
+            "desc": true
+          }
+        ]
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "order_id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 300
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "failed_at_stage"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 160
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "confirmed": {
+                        "text": "confirm_order",
+                        "color": "orange",
+                        "index": 0
+                      },
+                      "preparing": {
+                        "text": "prepare_order",
+                        "color": "red",
+                        "index": 1
+                      },
+                      "ready": {
+                        "text": "assign_courier",
+                        "color": "purple",
+                        "index": 2
+                      },
+                      "out_for_delivery": {
+                        "text": "complete_delivery",
+                        "color": "dark-red",
+                        "index": 3
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "total_amount"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "custom.width",
+                "value": 120
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "failed_at"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 180
+              },
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocal"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "reason"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 400
+              }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
+          "rawSql": "SELECT   o.id          AS order_id,   o.customer_id,   o.total_amount,   e.from_status AS failed_at_stage,   e.reason,   e.created_at  AS failed_at FROM orders o JOIN order_events e ON o.id = e.order_id WHERE o.status = 'dead_lettered'   AND e.to_status = 'failed' ORDER BY e.created_at DESC LIMIT 100",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
     }
   ]
 }

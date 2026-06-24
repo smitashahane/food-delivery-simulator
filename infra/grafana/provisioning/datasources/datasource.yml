@@ -14,3 +14,19 @@ datasources:
     editable: true
     orgId: 1
     version: 1
+
+  - name: PostgreSQL
+    uid: postgres
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    database: fooddelivery
+    user: fooddelivery
+    secureJsonData:
+      password: fooddelivery
+    jsonData:
+      sslmode: disable
+      postgresVersion: 1500
+    editable: true
+    orgId: 1
+    version: 1
