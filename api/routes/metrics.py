@@ -2,8 +2,11 @@ import logging
 import time
 from datetime import datetime, timezone, timedelta
 
+import os
+
 from flask import Blueprint, Response, jsonify
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST, CollectorRegistry
+from prometheus_client.multiprocess import MultiProcessCollector
 from sqlalchemy import func
 
 from database import get_session
@@ -17,6 +20,10 @@ metrics_bp = Blueprint("metrics", __name__)
 @metrics_bp.get("/metrics")
 def prometheus_metrics():
     _sync_redis_to_gauges()
+    if os.environ.get("PROMETHEUS_MULTIPROC_DIR"):
+        registry = CollectorRegistry()
+        MultiProcessCollector(registry)
+        return Response(generate_latest(registry), mimetype=CONTENT_TYPE_LATEST)
     return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 

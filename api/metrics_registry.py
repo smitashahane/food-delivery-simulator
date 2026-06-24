@@ -3,6 +3,10 @@ Central prometheus_client metric definitions.
 
 Import from here — never instantiate metrics elsewhere — so every
 process sees the same registry and there are no duplicate-registration errors.
+
+multiprocess_mode on Gauges is required when PROMETHEUS_MULTIPROC_DIR is set:
+  livesum — sum values from all live processes (used for counts that should total)
+  liveall — expose per-process values (not used here)
 """
 from prometheus_client import Counter, Gauge, Histogram
 
@@ -19,6 +23,7 @@ orders_by_status = Gauge(
     "orders_by_status",
     "Current order count by lifecycle status",
     ["status"],
+    multiprocess_mode="livesum",
 )
 
 order_stage_duration_seconds = Histogram(
@@ -49,9 +54,10 @@ dlq_orders_total = Counter(
     "Orders that exhausted retries and entered the dead-letter queue",
 )
 
-# ── Queue depth (written by worker, read by /metrics) ────────────────────────
+# ── Queue depth (written by API, read by /metrics) ────────────────────────────
 
 celery_queue_depth = Gauge(
     "celery_queue_depth",
     "Approximate number of tasks waiting in the pipeline queue",
+    multiprocess_mode="livesum",
 )

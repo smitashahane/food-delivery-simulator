@@ -7,6 +7,7 @@ volumes:
   redis-data:
   prometheus-data:
   grafana-data:
+  prometheus-multiproc:
 
 x-api-base: &api-base
   build:
@@ -68,6 +69,10 @@ services:
   api:
     <<: *api-base
     command: python -m gunicorn "app:create_app()" --bind 0.0.0.0:5000 --workers 1 --worker-class gthread --threads 8 --timeout 60
+    environment:
+      PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus_multiproc
+    volumes:
+      - prometheus-multiproc:/tmp/prometheus_multiproc
     ports:
       - "5000:5000"
     healthcheck:
@@ -85,6 +90,10 @@ services:
   worker:
     <<: *api-base
     command: celery -A tasks worker --loglevel=info --concurrency=4 --queues=pipeline,dlq
+    environment:
+      PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus_multiproc
+    volumes:
+      - prometheus-multiproc:/tmp/prometheus_multiproc
     depends_on:
       api:
         condition: service_healthy
