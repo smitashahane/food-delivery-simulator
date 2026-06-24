@@ -39,7 +39,7 @@ test:
 
 # Start the load generator (auto-places orders at RATE/sec)
 loadgen: check-env
-	docker compose --profile loadgen up -d loadgen
+	docker compose --profile loadgen up -d
 
 # Wipe DB + Redis and restart cleanly — use before a demo
 reset: check-env
