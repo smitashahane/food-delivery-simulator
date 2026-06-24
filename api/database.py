@@ -15,13 +15,10 @@ _Session = None
 
 def init_db(database_url: str):
     global _engine, _Session
-    _engine = create_engine(
-        database_url,
-        pool_size=10,
-        max_overflow=20,
-        pool_pre_ping=True,  # reconnect after Postgres restart
-        echo=False,
-    )
+    kwargs = {"echo": False}
+    if not database_url.startswith("sqlite"):
+        kwargs.update(pool_size=10, max_overflow=20, pool_pre_ping=True)
+    _engine = create_engine(database_url, **kwargs)
     _Session = scoped_session(sessionmaker(bind=_engine))
 
     # Import models so Base knows about them before create_all

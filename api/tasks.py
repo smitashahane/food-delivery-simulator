@@ -126,17 +126,8 @@ def confirm_order(self, order_id: str):
     _ensure_init()
     stage = "confirm_order"
 
-    try:
-        transition(order_id, OrderStatus.PLACED, OrderStatus.CONFIRMED, WORKER_ID)
-    except AlreadyTransitionedError:
-        # Previous attempt already did this — chain forward and exit
-        prepare_order.apply_async(args=[order_id], queue="pipeline")
-        return
-    except InvalidTransitionError as exc:
-        logger.error('{"order_id":"%s","stage":"%s","msg":"invalid transition","error":"%s"}',
-                     order_id, stage, exc)
-        return
-
+    # Call restaurant first — only transition DB after external confirmation succeeds.
+    # This prevents an order being marked CONFIRMED while the restaurant never heard about it.
     try:
         _http_post(f"{RESTAURANT_URL}/confirm", {"order_id": order_id})
         _record_health("restaurant", success=True)
@@ -150,6 +141,15 @@ def confirm_order(self, order_id: str):
     except requests.RequestException as exc:
         _record_health("restaurant", success=False)
         _handle_retry(self, order_id, stage, exc)
+        return
+
+    try:
+        transition(order_id, OrderStatus.PLACED, OrderStatus.CONFIRMED, WORKER_ID)
+    except AlreadyTransitionedError:
+        pass  # concurrent worker beat us to it — safe to continue
+    except InvalidTransitionError as exc:
+        logger.error('{"order_id":"%s","stage":"%s","msg":"invalid transition","error":"%s"}',
+                     order_id, stage, exc)
         return
 
     prepare_order.apply_async(args=[order_id], queue="pipeline")

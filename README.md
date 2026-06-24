@@ -1,12 +1,12 @@
 # Food Delivery Order Pipeline Simulator
 
-A full-stack system that simulates a food-delivery order pipeline — from "Place Order" through to "Delivered" — under real-world conditions: burst traffic, flaky downstream systems, and exactly-once processing guarantees.
+A full-stack system that simulates a food-delivery order pipeline — from "Place Order" through to "Delivered" — under real-world conditions: burst traffic, flaky downstream systems, and at-least-once delivery with idempotent state transitions.
 
 ## What it demonstrates
 
 - **Order lifecycle** — `placed → confirmed → preparing → ready → out_for_delivery → delivered`
 - **Resilience** — restaurant and courier simulators fail randomly; the pipeline retries with exponential backoff and recovers automatically
-- **Exactly-once processing** — concurrent workers never double-process an order; crashes never lose one
+- **Idempotent processing** — tasks may execute more than once (at-least-once delivery), but state transitions are idempotent: a duplicate transition is detected via `SELECT FOR UPDATE` and safely skipped
 - **Live dashboard** — React UI updates in real time via Server-Sent Events; no manual refresh needed
 - **Chaos engineering** — control failure rates, latency, and blackouts from the UI at runtime
 - **Dinner rush mode** — spike traffic to simulate peak load, cancel it early if needed
@@ -49,6 +49,34 @@ Open the UIs:
 | **Dashboard** (live pipeline view) | http://localhost:8080 |
 | **Grafana** (ops metrics) | http://localhost:3000 |
 | **Prometheus** | http://localhost:9090 |
+
+## Demo walkthrough
+
+```bash
+# 1. Fresh start
+make reset
+
+# 2. Open the dashboard
+open http://localhost:8080
+
+# 3. Place an order via the UI
+#    API Explorer → select a restaurant → add items → Place Order
+#    Watch the order flow through states in the Order Feed below
+
+# 4. Inject chaos — push restaurant failure rate to 80%
+#    Chaos Controls → Restaurant Simulator → Failure rate slider → 80%
+#    Place another order — watch it retry in the feed, eventually recover
+
+# 5. Trigger a blackout
+#    Chaos Controls → Restaurant Simulator → Blackout toggle ON
+#    Place an order — it will exhaust retries and become dead_lettered
+#    Toggle blackout OFF to recover the simulator
+
+# 6. Dinner rush (requires load generator)
+make loadgen          # start auto-placing orders at 2/sec
+#    Chaos Controls → Dinner Rush → Trigger Dinner Rush
+#    Watch throughput spike in the chart and queue depth rise in Grafana
+```
 
 ## Placing orders
 
@@ -119,6 +147,7 @@ make loadgen       # start the load generator (opt-in)
 make rush          # trigger a dinner rush burst via the API
 make scale n=4     # run 4 parallel Celery workers
 make logs          # tail all logs
+make test          # run backend tests (no containers needed)
 make clean         # destroy everything including volumes
 ```
 
@@ -159,6 +188,23 @@ placed → confirmed → preparing → ready → out_for_delivery → delivered
 
 - **failed** — pipeline exhausted all 5 retries
 - **dead_lettered** — confirmed unrecoverable; needs manual intervention in a real system (refund, alert, replay)
+
+## Reliability guarantees
+
+The pipeline uses **at-least-once delivery with idempotent state transitions**:
+
+- Celery is configured with `acks_late=True` — a task is only acknowledged after it completes, so a worker crash re-queues it
+- Each state transition is protected by `SELECT FOR UPDATE` in PostgreSQL — if two workers race, the second sees the row already in the target state and raises `AlreadyTransitionedError` (silently skipped)
+- `order_id` acts as the idempotency key: the `orders` table has a `UNIQUE` constraint on it, so a duplicate `POST /orders` returns `409` instead of creating a second record
+- Together these mean a task may execute more than once, but the order always ends up in exactly one state
+
+## Running tests
+
+```bash
+make test
+```
+
+Tests run inside the API container against an in-memory SQLite database — no broker, no Redis, no Celery needed.
 
 ## Project structure
 

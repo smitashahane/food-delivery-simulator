@@ -28,6 +28,8 @@ VALID_TRANSITIONS: dict[OrderStatus, list[OrderStatus]] = {
     OrderStatus.PREPARING:        [OrderStatus.READY,            OrderStatus.CANCELLED, OrderStatus.FAILED],
     OrderStatus.READY:            [OrderStatus.OUT_FOR_DELIVERY, OrderStatus.CANCELLED, OrderStatus.FAILED],
     OrderStatus.OUT_FOR_DELIVERY: [OrderStatus.DELIVERED,        OrderStatus.FAILED],
+    OrderStatus.FAILED:           [OrderStatus.DEAD_LETTERED],
+    OrderStatus.CANCELLED:        [OrderStatus.DEAD_LETTERED],
 }
 
 

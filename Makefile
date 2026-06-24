@@ -1,4 +1,4 @@
-.PHONY: up down logs restart scale rush ps clean reset reload loadgen
+.PHONY: up down logs restart scale rush ps clean reset reload loadgen test
 
 up:
 	docker compose up -d
@@ -28,6 +28,10 @@ ps:
 # Restart all containers to pick up config changes — keeps existing data
 reload:
 	docker compose up -d --remove-orphans
+
+# Run backend tests (no running containers needed)
+test:
+	docker exec practicals-api-1 python -m pytest tests/ -v
 
 # Start the load generator (auto-places orders at RATE/sec)
 loadgen:
