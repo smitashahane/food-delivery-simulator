@@ -19,8 +19,8 @@ function SliderRow({ label, value, min, max, step = 0.05, format, onChange }) {
   return (
     <div style={{ marginBottom: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-        <span style={{ fontSize: 12, color: "#9ca3af" }}>{label}</span>
-        <span style={{ fontSize: 12, color: "#e5e7eb", fontWeight: 600 }}>{format(value)}</span>
+        <span style={{ fontSize: 12, color: "#6b7280" }}>{label}</span>
+        <span style={{ fontSize: 12, color: "#111827", fontWeight: 600 }}>{format(value)}</span>
       </div>
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(parseFloat(e.target.value))}
@@ -32,10 +32,10 @@ function SliderRow({ label, value, min, max, step = 0.05, format, onChange }) {
 function Toggle({ label, checked, onChange, color = "#ef4444" }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-      <span style={{ fontSize: 12, color: "#9ca3af" }}>{label}</span>
+      <span style={{ fontSize: 12, color: "#6b7280" }}>{label}</span>
       <div onClick={() => onChange(!checked)} style={{
         width: 40, height: 22, borderRadius: 11, cursor: "pointer",
-        background: checked ? color : "#374151", position: "relative", transition: "background 0.2s",
+        background: checked ? color : "#d1d5db", position: "relative", transition: "background 0.2s",
       }}>
         <div style={{
           position: "absolute", top: 3, left: checked ? 21 : 3,
@@ -73,7 +73,7 @@ function ServicePanel({ label, config, failurePath, latencyPath, blackoutPath, a
   const statusLabel = blackout ? "DOWN" : failureRate > 0.5 ? "DEGRADED" : "HEALTHY";
 
   return (
-    <div style={{ flex: 1, background: "#111827", border: `1px solid ${color}33`, borderRadius: 8, padding: 16 }}>
+    <div style={{ flex: 1, background: "#ffffff", border: `1px solid ${color}`, borderRadius: 8, padding: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <span style={{ fontWeight: 700, color, fontSize: 14 }}>{label}</span>
         <span style={{
@@ -159,10 +159,10 @@ export default function ChaosControls() {
       </div>
 
       {/* Dinner Rush */}
-      <div style={{ background: "#111827", border: "1px solid #f59e0b33", borderRadius: 8, padding: 16 }}>
+      <div style={{ background: "#ffffff", border: "1px solid #f59e0b", borderRadius: 8, padding: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
           <span style={{ fontWeight: 700, color: "#f59e0b", fontSize: 14 }}>Dinner Rush</span>
-          <span style={{ fontSize: 11, color: "#6b7280" }}>requires <code style={{ color: "#9ca3af" }}>make loadgen</code></span>
+          <span style={{ fontSize: 11, color: "#6b7280" }}>requires <code style={{ color: "#6b7280" }}>make loadgen</code></span>
         </div>
 
         <div style={{ display: "flex", gap: 16, alignItems: "flex-end", flexWrap: "wrap" }}>
@@ -185,7 +185,7 @@ export default function ChaosControls() {
               </>
             ) : (
               <button onClick={triggerBurst} style={{
-                padding: "10px 28px", background: "#f59e0b", color: "#0f1117",
+                padding: "10px 28px", background: "#f59e0b", color: "#ffffff",
                 border: "none", borderRadius: 6, fontWeight: 700, fontSize: 14, cursor: "pointer",
               }}>Trigger Dinner Rush</button>
             )}
