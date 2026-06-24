@@ -8,11 +8,11 @@ function Indicator({ name, status }) {
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px",
-      background: "#1f2937", borderRadius: 8, border: `1px solid ${cfg.color}33` }}>
+      background: "#ffffff", borderRadius: 8, border: `1px solid ${cfg.color}` }}>
       <div style={{ width: 10, height: 10, borderRadius: "50%", background: cfg.color,
         boxShadow: `0 0 6px ${cfg.color}` }} />
       <div>
-        <div style={{ fontWeight: 600, fontSize: 13 }}>{name}</div>
+        <div style={{ fontWeight: 600, fontSize: 13, color: "#111827" }}>{name}</div>
         <div style={{ fontSize: 11, color: cfg.color }}>{cfg.label}</div>
       </div>
     </div>

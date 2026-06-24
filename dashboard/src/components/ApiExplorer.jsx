@@ -3,15 +3,15 @@ import { useState } from "react";
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
 const input = {
-  width: "100%", padding: "8px 10px", background: "#0f1117",
-  border: "1px solid #374151", borderRadius: 6, color: "#e5e7eb",
+  width: "100%", padding: "8px 10px", background: "#ffffff",
+  border: "1px solid #d1d5db", borderRadius: 6, color: "#111827",
   fontSize: 13, outline: "none", boxSizing: "border-box",
 };
-const label = { fontSize: 12, color: "#9ca3af", display: "block", marginBottom: 4 };
+const label = { fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 };
 const field = { marginBottom: 12 };
 const btn = (color = "#10b981", disabled = false) => ({
-  padding: "9px 20px", background: disabled ? "#374151" : color,
-  color: disabled ? "#6b7280" : "#0f1117", border: "none", borderRadius: 6,
+  padding: "9px 20px", background: disabled ? "#e5e7eb" : color,
+  color: disabled ? "#9ca3af" : "#ffffff", border: "none", borderRadius: 6,
   fontWeight: 700, fontSize: 13, cursor: disabled ? "not-allowed" : "pointer",
 });
 
@@ -20,13 +20,13 @@ function ResponseBox({ response }) {
   const isError = response.status >= 400;
   return (
     <div style={{
-      marginTop: 16, background: "#0f1117", border: `1px solid ${isError ? "#ef4444" : "#10b981"}`,
+      marginTop: 16, background: "#f9fafb", border: `1px solid ${isError ? "#ef4444" : "#10b981"}`,
       borderRadius: 6, padding: 12,
     }}>
       <div style={{ fontSize: 11, color: isError ? "#ef4444" : "#10b981", marginBottom: 6, fontWeight: 700 }}>
         HTTP {response.status} {response.statusText}
       </div>
-      <pre style={{ fontSize: 12, color: "#d1d5db", whiteSpace: "pre-wrap", wordBreak: "break-all", margin: 0 }}>
+      <pre style={{ fontSize: 12, color: "#111827", whiteSpace: "pre-wrap", wordBreak: "break-all", margin: 0 }}>
         {JSON.stringify(response.body, null, 2)}
       </pre>
     </div>
@@ -105,17 +105,17 @@ function PlaceOrder({ onOrderPlaced }) {
           <input style={input} type="number" min="1" step="0.5" value={item.price}
             onChange={e => updateItem(idx, "price", e.target.value)} placeholder="Price $" />
           <button onClick={() => removeItem(idx)}
-            style={{ background: "none", border: "1px solid #374151", color: "#ef4444", borderRadius: 4, padding: "4px 10px", cursor: "pointer", fontSize: 16 }}>
+            style={{ background: "none", border: "1px solid #d1d5db", color: "#ef4444", borderRadius: 4, padding: "4px 10px", cursor: "pointer", fontSize: 16 }}>
             ×
           </button>
         </div>
       ))}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-        <button onClick={addItem} style={{ background: "none", border: "1px solid #374151", color: "#9ca3af", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>
+        <button onClick={addItem} style={{ background: "none", border: "1px solid #d1d5db", color: "#6b7280", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>
           + Add item
         </button>
-        <span style={{ color: "#9ca3af", fontSize: 13 }}>Total: <strong style={{ color: "#e5e7eb" }}>${total.toFixed(2)}</strong></span>
+        <span style={{ color: "#6b7280", fontSize: 13 }}>Total: <strong style={{ color: "#111827" }}>${total.toFixed(2)}</strong></span>
       </div>
 
       <button onClick={submit} disabled={loading} style={{ ...btn("#10b981", loading), marginTop: 16, width: "100%" }}>
@@ -191,7 +191,7 @@ function ListOrders({ onSelectOrder }) {
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
-              <tr style={{ borderBottom: "1px solid #374151", color: "#6b7280" }}>
+              <tr style={{ borderBottom: "1px solid #d1d5db", color: "#6b7280" }}>
                 {["Order ID", "Customer", "Restaurant", "Status", "Total", "Placed At"].map(h => (
                   <th key={h} style={{ textAlign: "left", padding: "6px 10px", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
@@ -201,19 +201,19 @@ function ListOrders({ onSelectOrder }) {
               {orders.map(o => (
                 <tr key={o.order_id}
                   onClick={() => onSelectOrder(o.order_id)}
-                  style={{ borderBottom: "1px solid #1f2937", cursor: "pointer" }}
-                  onMouseEnter={e => e.currentTarget.style.background = "#1f2937"}
+                  style={{ borderBottom: "1px solid #e5e7eb", cursor: "pointer" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "#f3f4f6"}
                   onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                 >
                   <td style={{ padding: "6px 10px", fontFamily: "monospace", color: "#6366f1" }}>
                     {o.order_id.slice(0, 8)}…
                   </td>
-                  <td style={{ padding: "6px 10px", color: "#d1d5db" }}>{o.customer_id}</td>
-                  <td style={{ padding: "6px 10px", color: "#d1d5db" }}>{o.restaurant_id}</td>
+                  <td style={{ padding: "6px 10px", color: "#111827" }}>{o.customer_id}</td>
+                  <td style={{ padding: "6px 10px", color: "#111827" }}>{o.restaurant_id}</td>
                   <td style={{ padding: "6px 10px" }}>
                     <StatusBadge status={o.status} />
                   </td>
-                  <td style={{ padding: "6px 10px", color: "#d1d5db" }}>${o.total_amount}</td>
+                  <td style={{ padding: "6px 10px", color: "#111827" }}>${o.total_amount}</td>
                   <td style={{ padding: "6px 10px", color: "#6b7280" }}>
                     {new Date(o.placed_at).toLocaleTimeString()}
                   </td>
@@ -282,9 +282,9 @@ function GetOrder({ prefillId }) {
               ["Total",       `$${order.total_amount}`],
               ["Placed",      new Date(order.placed_at).toLocaleString()],
             ].map(([k, v]) => (
-              <div key={k} style={{ background: "#0f1117", borderRadius: 6, padding: "8px 12px", border: "1px solid #1f2937" }}>
+              <div key={k} style={{ background: "#f9fafb", borderRadius: 6, padding: "8px 12px", border: "1px solid #e5e7eb" }}>
                 <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 2 }}>{k}</div>
-                <div style={{ fontSize: 13, color: "#e5e7eb", fontWeight: 600 }}>{v}</div>
+                <div style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{v}</div>
               </div>
             ))}
           </div>
@@ -294,7 +294,7 @@ function GetOrder({ prefillId }) {
             <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 6, textTransform: "uppercase" }}>Items</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {(order.items ?? []).map((it, i) => (
-                <span key={i} style={{ background: "#1f2937", borderRadius: 4, padding: "4px 10px", fontSize: 12, color: "#d1d5db" }}>
+                <span key={i} style={{ background: "#f3f4f6", borderRadius: 4, padding: "4px 10px", fontSize: 12, color: "#111827" }}>
                   {it.name} × {it.quantity} — ${it.price}
                 </span>
               ))}
@@ -305,16 +305,16 @@ function GetOrder({ prefillId }) {
           <div>
             <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 8, textTransform: "uppercase" }}>Audit Trail</div>
             <div style={{ position: "relative", paddingLeft: 20 }}>
-              <div style={{ position: "absolute", left: 7, top: 0, bottom: 0, width: 2, background: "#1f2937" }} />
+              <div style={{ position: "absolute", left: 7, top: 0, bottom: 0, width: 2, background: "#e5e7eb" }} />
               {events.map((ev, i) => (
                 <div key={ev.id} style={{ position: "relative", marginBottom: 12 }}>
                   <div style={{
                     position: "absolute", left: -17, top: 4, width: 10, height: 10,
-                    borderRadius: "50%", background: i === events.length - 1 ? "#10b981" : "#374151",
-                    border: "2px solid #0f1117",
+                    borderRadius: "50%", background: i === events.length - 1 ? "#10b981" : "#d1d5db",
+                    border: "2px solid #ffffff",
                   }} />
                   <div style={{ display: "flex", gap: 12, alignItems: "baseline" }}>
-                    <span style={{ fontSize: 12, color: "#e5e7eb", fontWeight: 600 }}>
+                    <span style={{ fontSize: 12, color: "#111827", fontWeight: 600 }}>
                       {ev.from_status ? `${ev.from_status} → ` : ""}{ev.to_status}
                     </span>
                     <span style={{ fontSize: 11, color: "#6b7280" }}>
@@ -380,11 +380,11 @@ export default function ApiExplorer({ onOrderPlaced }) {
   return (
     <div>
       {/* Tab bar */}
-      <div style={{ display: "flex", gap: 4, marginBottom: 20, borderBottom: "1px solid #1f2937", paddingBottom: 0 }}>
+      <div style={{ display: "flex", gap: 4, marginBottom: 20, borderBottom: "1px solid #e5e7eb", paddingBottom: 0 }}>
         {TABS.map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)} style={{
             background: "none", border: "none", padding: "8px 16px",
-            color: activeTab === tab ? "#e5e7eb" : "#6b7280",
+            color: activeTab === tab ? "#111827" : "#6b7280",
             fontWeight: activeTab === tab ? 700 : 400,
             fontSize: 13, cursor: "pointer",
             borderBottom: activeTab === tab ? "2px solid #6366f1" : "2px solid transparent",
