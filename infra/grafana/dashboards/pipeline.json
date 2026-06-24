@@ -237,7 +237,7 @@
       },
       "targets": [
         {
-          "expr": "rate(downstream_requests_total{outcome=\"error\"}[2m]) / ignoring(outcome) group_left rate(downstream_requests_total[2m])",
+          "expr": "sum by(service)(rate(downstream_requests_total{outcome=\"error\"}[2m])) / sum by(service)(rate(downstream_requests_total[2m]))",
           "legendFormat": "{{service}}",
           "datasource": {
             "type": "prometheus",
