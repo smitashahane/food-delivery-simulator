@@ -9,10 +9,10 @@ import ChaosControls from "./components/ChaosControls";
 import ApiExplorer from "./components/ApiExplorer";
 
 const SECTION = {
-  background: "#111827", borderRadius: 10, padding: 20,
-  border: "1px solid #1f2937", marginBottom: 16,
+  background: "#f9fafb", borderRadius: 10, padding: 20,
+  border: "1px solid #e5e7eb", marginBottom: 16,
 };
-const HEADING = { fontSize: 13, fontWeight: 600, color: "#9ca3af", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 };
+const HEADING = { fontSize: 13, fontWeight: 600, color: "#6b7280", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 };
 
 export default function App() {
   const [stats, setStats]       = useState(null);
@@ -57,7 +57,7 @@ export default function App() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>Food Delivery Pipeline</h1>
-          <p style={{ color: "#6b7280", fontSize: 13, marginTop: 2 }}>Live operations view</p>
+          <p style={{ color: "#4b5563", fontSize: 13, marginTop: 2 }}>Live operations view</p>
         </div>
         <span style={{ color: "#6b7280", fontSize: 12 }}>
           {stats ? `${stats.orders_per_minute_last_5} orders/min` : "connecting…"}

@@ -15,7 +15,7 @@ export default function StatusCounts({ counts }) {
     <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
       {Object.entries(STATUS_META).map(([key, { label, color }]) => (
         <div key={key} style={{
-          background: "#1f2937",
+          background: "#ffffff",
           border: `1px solid ${color}`,
           borderRadius: 8,
           padding: "12px 20px",
@@ -23,7 +23,7 @@ export default function StatusCounts({ counts }) {
           textAlign: "center",
         }}>
           <div style={{ fontSize: 28, fontWeight: 700, color }}>{counts?.[key] ?? 0}</div>
-          <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>{label}</div>
+          <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>{label}</div>
         </div>
       ))}
     </div>

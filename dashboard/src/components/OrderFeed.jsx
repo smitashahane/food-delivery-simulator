@@ -25,7 +25,7 @@ export default function OrderFeed({ orders }) {
     <div style={{ overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
         <thead>
-          <tr style={{ borderBottom: "1px solid #374151", color: "#9ca3af" }}>
+          <tr style={{ borderBottom: "1px solid #d1d5db", color: "#6b7280" }}>
             <th style={{ textAlign: "left", padding: "8px 12px" }}>Order ID</th>
             <th style={{ textAlign: "left", padding: "8px 12px" }}>Restaurant</th>
             <th style={{ textAlign: "left", padding: "8px 12px" }}>Status</th>
@@ -34,11 +34,11 @@ export default function OrderFeed({ orders }) {
         </thead>
         <tbody>
           {orders.map((o) => (
-            <tr key={o.order_id} style={{ borderBottom: "1px solid #1f2937" }}>
-              <td style={{ padding: "8px 12px", fontFamily: "monospace", color: "#d1d5db" }}>
+            <tr key={o.order_id} style={{ borderBottom: "1px solid #e5e7eb" }}>
+              <td style={{ padding: "8px 12px", fontFamily: "monospace", color: "#111827" }}>
                 {o.order_id.slice(0, 8)}…
               </td>
-              <td style={{ padding: "8px 12px", color: "#d1d5db" }}>{o.restaurant_id}</td>
+              <td style={{ padding: "8px 12px", color: "#111827" }}>{o.restaurant_id}</td>
               <td style={{ padding: "8px 12px" }}><Badge status={o.status} /></td>
               <td style={{ padding: "8px 12px", color: "#6b7280" }}>
                 {new Date(o.placed_at).toLocaleTimeString()}
