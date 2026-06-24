@@ -4,7 +4,6 @@ import { fetchStats, fetchRecentOrders } from "./api";
 import StatusCounts from "./components/StatusCounts";
 import OrderFeed from "./components/OrderFeed";
 import ThroughputChart from "./components/ThroughputChart";
-import SystemHealth from "./components/SystemHealth";
 import ChaosControls from "./components/ChaosControls";
 import ApiExplorer from "./components/ApiExplorer";
 
@@ -68,12 +67,6 @@ export default function App() {
       <div style={SECTION}>
         <div style={HEADING}>API Explorer</div>
         <ApiExplorer onOrderPlaced={() => fetchRecentOrders(50).then(r => setOrders(r.orders)).catch(() => {})} />
-      </div>
-
-      {/* System Health */}
-      <div style={SECTION}>
-        <div style={HEADING}>System Health</div>
-        <SystemHealth health={stats?.downstream_health} />
       </div>
 
       {/* Status Counts */}
