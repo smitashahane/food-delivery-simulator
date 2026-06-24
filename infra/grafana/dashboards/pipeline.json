@@ -237,7 +237,7 @@
       },
       "targets": [
         {
-          "expr": "sum by(service)(rate(downstream_requests_total{outcome=\"error\"}[2m])) / sum by(service)(rate(downstream_requests_total[2m]))",
+          "expr": "sum by(service)(rate(downstream_requests_total{outcome=\"error\"}[5m])) / sum by(service)(rate(downstream_requests_total[5m]))",
           "legendFormat": "{{service}}",
           "datasource": {
             "type": "prometheus",
@@ -326,7 +326,7 @@
       },
       "targets": [
         {
-          "expr": "rate(downstream_requests_total{outcome=\"success\"}[1m])",
+          "expr": "rate(downstream_requests_total{outcome=\"success\"}[2m])",
           "legendFormat": "{{service}} success",
           "datasource": {
             "type": "prometheus",
@@ -334,7 +334,7 @@
           }
         },
         {
-          "expr": "rate(downstream_requests_total{outcome=\"error\"}[1m])",
+          "expr": "rate(downstream_requests_total{outcome=\"error\"}[2m])",
           "legendFormat": "{{service}} error",
           "datasource": {
             "type": "prometheus",
