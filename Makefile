@@ -31,7 +31,7 @@ reload:
 
 # Run backend tests (no running containers needed)
 test:
-	docker exec practicals-api-1 python -m pytest tests/ -v
+	docker compose exec api python -m pytest tests/ -v
 
 # Start the load generator (auto-places orders at RATE/sec)
 loadgen:
@@ -40,8 +40,8 @@ loadgen:
 # Wipe DB + Redis and restart cleanly — use before a demo
 reset:
 	docker compose --profile loadgen stop worker loadgen api
-	docker exec practicals-postgres-1 psql -U fooddelivery -d fooddelivery -c "TRUNCATE order_events, orders RESTART IDENTITY CASCADE;"
-	docker exec practicals-redis-1 redis-cli FLUSHDB
+	docker compose exec postgres psql -U fooddelivery -d fooddelivery -c "TRUNCATE order_events, orders RESTART IDENTITY CASCADE;"
+	docker compose exec redis redis-cli FLUSHDB
 	docker compose up -d --remove-orphans
 
 # Destroy everything including volumes
