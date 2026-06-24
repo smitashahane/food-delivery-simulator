@@ -23,7 +23,7 @@ orders_by_status = Gauge(
     "orders_by_status",
     "Current order count by lifecycle status",
     ["status"],
-    multiprocess_mode="livesum",
+    multiprocess_mode="all",
 )
 
 order_stage_duration_seconds = Histogram(
@@ -59,5 +59,5 @@ dlq_orders_total = Counter(
 celery_queue_depth = Gauge(
     "celery_queue_depth",
     "Approximate number of tasks waiting in the pipeline queue",
-    multiprocess_mode="livesum",
+    multiprocess_mode="all",
 )

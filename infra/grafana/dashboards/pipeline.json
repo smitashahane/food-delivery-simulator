@@ -4,233 +4,469 @@
   "schemaVersion": 38,
   "version": 2,
   "refresh": "10s",
-  "time": { "from": "now-15m", "to": "now" },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
   "panels": [
     {
       "id": 1,
       "title": "Orders / sec",
       "type": "stat",
-      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
-      "targets": [{
-        "expr": "rate(orders_ingested_total[1m])",
-        "legendFormat": "orders/sec",
-        "datasource": { "type": "prometheus", "uid": "prometheus" }
-      }],
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "rate(orders_ingested_total[1m])",
+          "legendFormat": "orders/sec",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "ops",
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 5 },
-              { "color": "red", "value": 20 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
             ]
           }
         }
       },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "colorMode": "background" }
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "orientation": "auto",
+        "colorMode": "background"
+      }
     },
     {
       "id": 2,
       "title": "Retry Rate / sec",
       "type": "stat",
-      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
-      "targets": [{
-        "expr": "rate(retry_attempts_total[1m])",
-        "legendFormat": "retries/sec",
-        "datasource": { "type": "prometheus", "uid": "prometheus" }
-      }],
+      "gridPos": {
+        "x": 4,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "rate(retry_attempts_total[1m])",
+          "legendFormat": "retries/sec",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "ops",
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 0.5 },
-              { "color": "red", "value": 2 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.5
+              },
+              {
+                "color": "red",
+                "value": 2
+              }
             ]
           }
         }
       },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "colorMode": "background" }
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "orientation": "auto",
+        "colorMode": "background"
+      }
     },
     {
       "id": 3,
       "title": "DLQ Total",
       "type": "stat",
-      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
-      "targets": [{
-        "expr": "dlq_orders_total",
-        "legendFormat": "DLQ orders",
-        "datasource": { "type": "prometheus", "uid": "prometheus" }
-      }],
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "dlq_orders_total",
+          "legendFormat": "DLQ orders",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "red", "value": 1 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
             ]
           }
         }
       },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "colorMode": "background" }
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "orientation": "auto",
+        "colorMode": "background"
+      }
     },
     {
       "id": 4,
       "title": "Celery Queue Depth",
       "type": "stat",
-      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
-      "targets": [{
-        "expr": "celery_queue_depth",
-        "legendFormat": "queued tasks",
-        "datasource": { "type": "prometheus", "uid": "prometheus" }
-      }],
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "sum(celery_queue_depth)",
+          "legendFormat": "queued tasks",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 10 },
-              { "color": "red", "value": 50 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 10
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
             ]
           }
         }
       },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "colorMode": "background" }
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "orientation": "auto",
+        "colorMode": "background"
+      }
     },
     {
       "id": 5,
       "title": "Downstream Error Rate",
       "type": "stat",
-      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
-      "targets": [{
-        "expr": "rate(downstream_requests_total{outcome=\"error\"}[1m]) / rate(downstream_requests_total[1m])",
-        "legendFormat": "error rate",
-        "datasource": { "type": "prometheus", "uid": "prometheus" }
-      }],
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 4,
+        "h": 4
+      },
+      "targets": [
+        {
+          "expr": "rate(downstream_requests_total{outcome=\"error\"}[1m]) / rate(downstream_requests_total[1m])",
+          "legendFormat": "error rate",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "percentunit",
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 0.1 },
-              { "color": "red", "value": 0.3 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.1
+              },
+              {
+                "color": "red",
+                "value": 0.3
+              }
             ]
           }
         }
       },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "colorMode": "background" }
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "orientation": "auto",
+        "colorMode": "background"
+      }
     },
     {
       "id": 6,
       "title": "Orders Ingested Over Time",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
-      "targets": [{
-        "expr": "rate(orders_ingested_total[30s]) * 60",
-        "legendFormat": "orders / min",
-        "datasource": { "type": "prometheus", "uid": "prometheus" }
-      }],
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "rate(orders_ingested_total[30s]) * 60",
+          "legendFormat": "orders / min",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "color": { "mode": "palette-classic" }
+          "color": {
+            "mode": "palette-classic"
+          }
         }
       },
-      "options": { "tooltip": { "mode": "single" } }
+      "options": {
+        "tooltip": {
+          "mode": "single"
+        }
+      }
     },
     {
       "id": 7,
       "title": "Downstream Calls by Service & Outcome",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 8
+      },
       "targets": [
         {
           "expr": "rate(downstream_requests_total{outcome=\"success\"}[1m])",
           "legendFormat": "{{service}} success",
-          "datasource": { "type": "prometheus", "uid": "prometheus" }
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "expr": "rate(downstream_requests_total{outcome=\"error\"}[1m])",
           "legendFormat": "{{service}} error",
-          "datasource": { "type": "prometheus", "uid": "prometheus" }
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         }
       ],
       "fieldConfig": {
-        "defaults": { "unit": "ops", "color": { "mode": "palette-classic" } }
+        "defaults": {
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          }
+        }
       },
-      "options": { "tooltip": { "mode": "multi" } }
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
     },
     {
       "id": 8,
       "title": "Stage Transition Latency (p50 / p95)",
       "type": "timeseries",
-      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 12,
+        "h": 8
+      },
       "targets": [
         {
           "expr": "histogram_quantile(0.50, rate(order_stage_duration_seconds_bucket[5m]))",
           "legendFormat": "p50",
-          "datasource": { "type": "prometheus", "uid": "prometheus" }
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         },
         {
           "expr": "histogram_quantile(0.95, rate(order_stage_duration_seconds_bucket[5m]))",
           "legendFormat": "p95",
-          "datasource": { "type": "prometheus", "uid": "prometheus" }
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
         }
       ],
       "fieldConfig": {
-        "defaults": { "unit": "s", "color": { "mode": "palette-classic" } }
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          }
+        }
       },
-      "options": { "tooltip": { "mode": "multi" } }
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
     },
     {
       "id": 9,
       "title": "Retries by Stage",
       "type": "timeseries",
-      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
-      "targets": [{
-        "expr": "rate(retry_attempts_total[1m])",
-        "legendFormat": "{{stage}}",
-        "datasource": { "type": "prometheus", "uid": "prometheus" }
-      }],
-      "fieldConfig": {
-        "defaults": { "unit": "ops", "color": { "mode": "palette-classic" } }
+      "gridPos": {
+        "x": 12,
+        "y": 12,
+        "w": 12,
+        "h": 8
       },
-      "options": { "tooltip": { "mode": "multi" } }
+      "targets": [
+        {
+          "expr": "rate(retry_attempts_total[1m])",
+          "legendFormat": "{{stage}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": {
+            "mode": "palette-classic"
+          }
+        }
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
     },
     {
       "id": 10,
       "title": "Orders by Status (current)",
       "type": "bargauge",
-      "gridPos": { "x": 0, "y": 20, "w": 24, "h": 6 },
-      "targets": [{
-        "expr": "orders_by_status",
-        "legendFormat": "{{status}}",
-        "datasource": { "type": "prometheus", "uid": "prometheus" }
-      }],
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 24,
+        "h": 6
+      },
+      "targets": [
+        {
+          "expr": "sum by (status) (orders_by_status)",
+          "legendFormat": "{{status}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          }
+        }
+      ],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "min": 0
         }
       },
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
         "orientation": "horizontal",
         "displayMode": "gradient"
       }
