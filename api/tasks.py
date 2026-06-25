@@ -157,57 +157,69 @@ def confirm_order(self, order_id: str):
 
 # ─── Stage 2: confirmed → preparing → ready ──────────────────────────────────
 
+# Max polls before giving up waiting for food to be ready (2s between polls)
+_PREPARE_MAX_POLLS = 60
+
 @celery.task(
     name="tasks.prepare_order",
     bind=True,
-    max_retries=5,
+    max_retries=_PREPARE_MAX_POLLS + 5,  # poll quota + error retry headroom
     acks_late=True,
     reject_on_worker_lost=True,
 )
-def prepare_order(self, order_id: str):
+def prepare_order(self, order_id: str, _poll: int = 0):
+    """
+    Non-blocking poll: on each invocation, check if the restaurant is done.
+    If not, re-queue itself with a 2s ETA so the worker is free in the meantime.
+    _poll tracks how many status checks have been made (separate from error retries).
+    """
     _ensure_init()
     stage = "prepare_order"
 
-    # confirmed → preparing
+    # confirmed → preparing (idempotent — safe to call on every poll)
     try:
         transition(order_id, OrderStatus.CONFIRMED, OrderStatus.PREPARING, WORKER_ID)
     except AlreadyTransitionedError:
-        pass  # already preparing or further — fall through to poll
+        pass
     except InvalidTransitionError as exc:
         logger.error('{"order_id":"%s","stage":"%s","msg":"invalid transition","error":"%s"}',
                      order_id, stage, exc)
         return
 
-    # Signal restaurant to start preparing
+    # First poll: tell the restaurant to start preparing
+    if _poll == 0:
+        try:
+            _http_post(f"{RESTAURANT_URL}/prepare", {"order_id": order_id})
+            _record_health("restaurant", success=True)
+        except requests.HTTPError as exc:
+            _record_health("restaurant", success=False)
+            if exc.response is not None and exc.response.status_code == 429:
+                _handle_rate_limit(self, order_id, stage, exc)
+            _handle_retry(self, order_id, stage, exc)
+            return
+        except requests.RequestException as exc:
+            _record_health("restaurant", success=False)
+            _handle_retry(self, order_id, stage, exc)
+            return
+
+    # Check if food is ready
     try:
-        _http_post(f"{RESTAURANT_URL}/prepare", {"order_id": order_id})
+        resp = _http_get(f"{RESTAURANT_URL}/status/{order_id}")
         _record_health("restaurant", success=True)
-    except requests.HTTPError as exc:
-        _record_health("restaurant", success=False)
-        if exc.response is not None and exc.response.status_code == 429:
-            _handle_rate_limit(self, order_id, stage, exc)
-        _handle_retry(self, order_id, stage, exc)
-        return
+        ready = resp.json().get("ready", False)
     except requests.RequestException as exc:
         _record_health("restaurant", success=False)
         _handle_retry(self, order_id, stage, exc)
         return
 
-    # Poll until food is ready (max 60 polls × 2s = 2 minutes)
-    for poll in range(60):
-        try:
-            resp = _http_get(f"{RESTAURANT_URL}/status/{order_id}")
-            _record_health("restaurant", success=True)
-            if resp.json().get("ready"):
-                break
-        except requests.RequestException as exc:
-            _record_health("restaurant", success=False)
+    if not ready:
+        if _poll >= _PREPARE_MAX_POLLS:
+            exc = TimeoutError("Restaurant did not mark order ready within timeout")
             _handle_retry(self, order_id, stage, exc)
             return
-        time.sleep(2)
-    else:
-        exc = TimeoutError("Restaurant did not mark order ready within timeout")
-        _handle_retry(self, order_id, stage, exc)
+        # Re-queue after 2s — worker is free immediately
+        prepare_order.apply_async(args=[order_id], kwargs={"_poll": _poll + 1},
+                                  countdown=2, queue="pipeline")
         return
 
     # preparing → ready
@@ -267,32 +279,41 @@ def assign_courier(self, order_id: str):
 
 # ─── Stage 4: out_for_delivery → delivered ────────────────────────────────────
 
+# Max polls before giving up waiting for courier delivery (5s between polls)
+_DELIVERY_MAX_POLLS = 90
+
 @celery.task(
     name="tasks.complete_delivery",
     bind=True,
-    max_retries=5,
+    max_retries=_DELIVERY_MAX_POLLS + 5,
     acks_late=True,
     reject_on_worker_lost=True,
 )
-def complete_delivery(self, order_id: str):
+def complete_delivery(self, order_id: str, _poll: int = 0):
+    """
+    Non-blocking poll: check courier status and re-queue with 5s ETA if not
+    yet delivered, freeing the worker for other tasks between checks.
+    """
     _ensure_init()
     stage = "complete_delivery"
 
-    # Poll courier until delivered (max 90 polls × 5s = 7.5 minutes)
-    for poll in range(90):
-        try:
-            resp = _http_get(f"{COURIER_URL}/status/{order_id}")
-            _record_health("courier", success=True)
-            if resp.json().get("delivered"):
-                break
-        except requests.RequestException as exc:
-            _record_health("courier", success=False)
+    try:
+        resp = _http_get(f"{COURIER_URL}/status/{order_id}")
+        _record_health("courier", success=True)
+        delivered = resp.json().get("delivered", False)
+    except requests.RequestException as exc:
+        _record_health("courier", success=False)
+        _handle_retry(self, order_id, stage, exc)
+        return
+
+    if not delivered:
+        if _poll >= _DELIVERY_MAX_POLLS:
+            exc = TimeoutError("Courier did not confirm delivery within timeout")
             _handle_retry(self, order_id, stage, exc)
             return
-        time.sleep(5)
-    else:
-        exc = TimeoutError("Courier did not confirm delivery within timeout")
-        _handle_retry(self, order_id, stage, exc)
+        # Re-queue after 5s — worker is free immediately
+        complete_delivery.apply_async(args=[order_id], kwargs={"_poll": _poll + 1},
+                                      countdown=5, queue="pipeline")
         return
 
     try:
