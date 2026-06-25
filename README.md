@@ -73,7 +73,7 @@ open http://localhost:8080
 #    Toggle blackout OFF to recover the simulator
 
 # 6. Dinner rush (requires load generator)
-make loadgen          # start auto-placing orders at 2/sec
+make loadgen          # start auto-placing orders at ~2/min
 #    Chaos Controls → Dinner Rush → Trigger Dinner Rush
 #    Watch throughput spike in the chart and queue depth rise in Grafana
 ```
@@ -124,14 +124,14 @@ To watch retries and dead-lettering in action, push the restaurant failure rate 
 The load generator is opt-in — it doesn't run by default. Start it when you want automated traffic:
 
 ```bash
-make loadgen    # starts at 2 orders/sec steady rate
+make loadgen    # starts at ~2 orders/min steady rate
 ```
 
 Then trigger a burst from the **Chaos Controls → Dinner Rush** panel in the dashboard, or via:
 
 ```bash
-make rush                          # 50 orders/sec for 60s
-make rush burst=80 duration=90     # custom rate and duration
+make rush                          # 20 orders/sec for 60s (default)
+make rush burst=50 duration=90     # custom rate and duration
 ```
 
 Stop a rush early using the **Stop Rush** button in the dashboard.
@@ -204,7 +204,7 @@ The pipeline uses **at-least-once delivery with idempotent state transitions**:
 make test
 ```
 
-Tests run inside the API container against an in-memory SQLite database — no broker, no Redis, no Celery needed.
+Tests run inside the API container against an in-memory SQLite database — no broker, no Redis, no Celery needed. Requires the API container to be running (`make up`).
 
 ## Project structure
 
