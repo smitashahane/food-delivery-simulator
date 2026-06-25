@@ -611,7 +611,7 @@
             "type": "postgres",
             "uid": "postgres"
           },
-          "rawSql": "SELECT   o.id          AS order_id,   o.customer_id,   o.total_amount,   e.from_status AS failed_at_stage,   e.reason,   e.created_at  AS failed_at FROM orders o JOIN order_events e ON o.id = e.order_id WHERE o.status = 'dead_lettered'   AND e.to_status = 'failed' ORDER BY e.created_at DESC LIMIT 100",
+          "rawSql": "SELECT   o.id          AS order_id,   o.customer_id,   o.total_amount,   e.from_status::text AS failed_at_stage,   e.reason,   e.created_at  AS failed_at FROM orders o JOIN order_events e ON o.id = e.order_id WHERE o.status = 'DEAD_LETTERED'::order_status   AND e.to_status = 'FAILED'::order_status ORDER BY e.created_at DESC LIMIT 100",
           "format": "table",
           "refId": "A"
         }
