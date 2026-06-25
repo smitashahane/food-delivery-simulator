@@ -25,6 +25,7 @@ datasources:
     secureJsonData:
       password: fooddelivery
     jsonData:
+      database: fooddelivery
       sslmode: disable
       postgresVersion: 1500
     editable: true
