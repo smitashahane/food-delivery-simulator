@@ -111,7 +111,7 @@ export default function ChaosControls() {
   const [config,      setConfig]      = useState(null);
   const [burstActive, setBurstActive] = useState(false);
   const [burstRemain, setBurstRemain] = useState(0);
-  const [burstRps,    setBurstRps]    = useState(50);
+  const [burstRps,    setBurstRps]    = useState(20);
   const [burstDur,    setBurstDur]    = useState(60);
 
   useEffect(() => {

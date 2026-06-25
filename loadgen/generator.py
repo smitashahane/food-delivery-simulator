@@ -20,7 +20,7 @@ import redis as redis_lib
 
 TARGET_URL     = os.getenv("TARGET_URL",     "http://api:5000")
 RATE           = float(os.getenv("RATE",           "5"))
-BURST_RPS      = float(os.getenv("BURST_RPS",     "50"))
+BURST_RPS      = float(os.getenv("BURST_RPS",     "20"))
 BURST_DURATION = float(os.getenv("BURST_DURATION","60"))
 BURST_DELAY    = float(os.getenv("BURST_DELAY",   "0"))   # 0 = no auto burst
 REDIS_URL      = os.getenv("REDIS_URL", "redis://redis:6379/0")
